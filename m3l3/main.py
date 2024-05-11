@@ -3,10 +3,10 @@ from config import *
 from telebot import TeleBot
 from telebot.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telebot import types
-
+# токен
 bot = TeleBot(TOKEN)
 hideBoard = types.ReplyKeyboardRemove() 
-
+# отмена
 cancel_button = "Отмена 🚫"
 def cansel(message):
     bot.send_message(message.chat.id, "Чтобы посмотреть команды, используй - /info", reply_markup=hideBoard)
@@ -28,7 +28,7 @@ def gen_markup(rows):
         markup.add(KeyboardButton(row))
     markup.add(KeyboardButton(cancel_button))
     return markup
-
+# создание проекта
 attributes_of_projects = {'Имя проекта' : ["Введите новое имя проекта", "project_name"],
                           "Описание" : ["Введите новое описание проекта", "description"],
                           "Ссылка" : ["Введите новую ссылку на проект", "url"],
@@ -45,14 +45,14 @@ Link: {info[2]}
 Status: {info[3]}
 Skills: {skills}
 """)
-
+# приветствие
 @bot.message_handler(commands=['start'])
 def start_command(message):
     bot.send_message(message.chat.id, """Привет! Я бот-менеджер проектов:)
 Помогу тебе сохранить твои проекты и информацию о них!)!)!)! 
 """)
     info(message)
-    
+# команды   
 @bot.message_handler(commands=['info'])
 def info(message):
     bot.send_message(message.chat.id,
@@ -67,25 +67,25 @@ def info(message):
 
 Также ты можешь ввести имя проекта и узнать информацию о нем!""")
     
-
+# пишем название проекта
 @bot.message_handler(commands=['new_project'])
 def addtask_command(message):
     bot.send_message(message.chat.id, "Введите название проекта:")
     bot.register_next_step_handler(message, name_project)
-
+# ссылка на проект
 def name_project(message):
     name = message.text
     user_id = message.from_user.id
     data = [user_id, name]
     bot.send_message(message.chat.id, "Введите ссылку на проект")
     bot.register_next_step_handler(message, link_project, data=data)
-
+# статус проекта
 def link_project(message, data):
     data.append(message.text)
     statuses = [x[0] for x in manager.get_statuses()] 
     bot.send_message(message.chat.id, "Введите текущий статус проекта", reply_markup=gen_markup(statuses))
     bot.register_next_step_handler(message, callback_project, data=data, statuses=statuses)
-
+# ошибка при выборе
 def callback_project(message, data, statuses):
     status = message.text
     if message.text == cancel_button:
@@ -100,7 +100,7 @@ def callback_project(message, data, statuses):
     manager.insert_project([tuple(data)])
     bot.send_message(message.chat.id, "Проект сохранен")
 
-
+#навык
 @bot.message_handler(commands=['skills'])
 def skill_handler(message):
     user_id = message.from_user.id
@@ -118,7 +118,7 @@ def skill_project(message, projects):
     if message.text == cancel_button:
         cansel(message)
         return
-        
+# ошибка проект       
     if project_name not in projects:
         bot.send_message(message.chat.id, 'У тебя нет такого проекта, попробуй еще раз!) Выбери проект для которого нужно выбрать навык', reply_markup=gen_markup(projects))
         bot.register_next_step_handler(message, skill_project, projects=projects)
@@ -133,7 +133,7 @@ def set_skill(message, project_name, skills):
     if message.text == cancel_button:
         cansel(message)
         return
-        
+#ошибка навык       
     if skill not in skills:
         bot.send_message(message.chat.id, 'Видимо, ты выбрал навык. не из спика, попробуй еще раз!) Выбери навык', reply_markup=gen_markup(skills))
         bot.register_next_step_handler(message, set_skill, project_name=project_name, skills=skills)
@@ -254,8 +254,8 @@ def text_handler(message):
     bot.reply_to(message, "Тебе нужна помощь?")
     info(message)
 
-    
 if __name__ == '__main__':
     manager = DB_Manager(DATABASE)
     bot.infinity_polling()
+
     
